@@ -9,7 +9,7 @@ url --url="http://<%= @server_ip %>/distros/<%= @distro %>"
 # Root password
 rootpw --iscrypted <%= @defaultrootpw %>
 # System authorization information
-auth  --useshadow  --passalgo=sha512 --enablefingerprint
+authconfig --enableshadow --passalgo=sha512
 # Use text mode install
 text
 # System keyboard
@@ -49,7 +49,6 @@ part /data --ondisk=sda --asprimary --fstype="ext4" --size=4096 --grow
 
 # log pre
 $SNIPPET('log_ks_pre')
-$SNIPPET('kickstart_start')
 # network config
 $SNIPPET('pre_install_network_config')
 # enable installation monitoring
@@ -59,13 +58,34 @@ $SNIPPET('pre_anamon')
 # packages list
 #
 %packages
-
 @base
-
+glibc-devel
+kernel-devel
+gcc
+cpp
+ntp
+postfix
+-aspell
+-aspell-en
+-bluez-utils
+-bluez-libs
+-bluez-gnome
+-ypbind
+-nss_ldap
+-nss_ldap.i386
+-nscd
+-irda-utils
+-pcmciautils
+-ccid
+-coolkey
+-coolkey.i386
+-ifd-egate
+-pcsc-lite
+-sendmail
+-smartmontools
 # Puppet
 $SNIPPET('puppet_install_if_enabled')
 # End Puppet
-\%end
 
 #
 # post script
@@ -94,7 +114,7 @@ mkdir -m 700 /root/.ssh
 
 # disable services
 for i in atd auditd haldaemon iptables ip6tables iscsi iscsid lvm2-monitor mdmonitor messagebus; do chkconfig $i off; done || true
-for i in fcoe lldpad nfslock rpcbind rpcgssd rpcidmapd abrt-ccpp abrt-oops abrtd kdump; do chkconfig $i off; done || true
+for i in gpm kudzu yum-updatesd; do chkconfig $i off; done || true
 
 # setup network
 sed -i 's/NETWORKING_IPV6=yes/NETWORKING_IPV6=no/' /etc/sysconfig/network
@@ -106,4 +126,3 @@ $SNIPPET('post_anamon')
 # Start final steps
 $SNIPPET('kickstart_done')
 # End final steps
-\%end

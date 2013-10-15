@@ -4,8 +4,8 @@
 # https://fedorahosted.org/cobbler/
 #
 class cobbler::dhcp (
-  $nameservers     = $cobbler::params::nameservers,
-  $dhcp_interfaces = $cobbler::params::dhcp_interfaces
+  $nameservers     = $::cobbler::params::nameservers,
+  $dhcp_interfaces = $::cobbler::params::dhcp_interfaces
   ) inherits cobbler::params {
   package { 'dhcp':
     ensure => present,

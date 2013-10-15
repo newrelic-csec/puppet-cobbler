@@ -24,13 +24,7 @@
 #     Wether or not to manage ISC DHCP.
 #
 #   - $dhcp_dynamic_range [type: string]
-#     Enable dynamic range for DHCP server
-#
-#   - $dhcp_range_start [type: string]
-#     Starting octet for the DHCP range
-#
-#   - $dhcp_range_end [type: string]
-#     Ending octet for the DHCP range
+#     Range for DHCP server
 #
 #   - $manage_dns [type: string]
 #     Wether or not to manage DNS
@@ -58,6 +52,12 @@
 #   - $dhcp_interfaces [type: array]
 #     Interface for DHCP to listen on.
 #
+#   - $dhcp_subnets [type: array]
+#     If you use *DHCP relay* on your network, then $dhcp_interfaces
+#     won't suffice. $dhcp_subnets have to be defined, otherwise,
+#     DHCP won't offer address to a machine in a network that's
+#     not directly available on the DHCP machine itself.
+#
 #   - $defaultrootpw [type: string]
 #     Hash of root password for kickstart files.
 #
@@ -76,9 +76,15 @@
 #     repo, profiles and systems which are not managed by puppet.
 #     Default is true.
 #
+#   - default_kickstart [type: string]
+#     Location of the default kickstart. Default depends on $::osfamily.
+#
+#   - webroot [type: string]
+#     Location of Cobbler's web root. Default: '/var/www/cobbler'.
+#
 # Actions:
-#   - Install Apache
-#   - Manage Apache service
+#   - Install Cobbler
+#   - Manage Cobbler service
 #
 # Requires:
 #   - puppetlabs/apache class
@@ -87,45 +93,46 @@
 # Sample Usage:
 #
 class cobbler (
-  $service_name       = $cobbler::params::service_name,
-  $package_name       = $cobbler::params::package_name,
-  $package_ensure     = $cobbler::params::package_ensure,
-  $distro_path        = $cobbler::params::distro_path,
-  $manage_dhcp        = $cobbler::params::manage_dhcp,
-  $dhcp_dynamic_range = $cobbler::params::dhcp_dynamic_range,
-  $dhcp_range_start   = $cobbler::params::dhcp_range_start,
-  $dhcp_range_end     = $cobbler::params::dhcp_range_end,
-  $dhcp_lease_default = $cobbler::params::dhcp_lease_default,
-  $dhcp_lease_max     = $cobbler::params::dhcp_lease_max,
-  $manage_dns         = $cobbler::params::manage_dns,
-  $dns_option         = $cobbler::params::dns_option,
-  $manage_tftpd       = $cobbler::params::manage_tftpd,
-  $tftpd_option       = $cobbler::params::tftpd_option,
-  $server_ip          = $cobbler::params::server_ip,
-  $next_server_ip     = $cobbler::params::next_server_ip,
-  $nameservers        = $cobbler::params::nameservers,
-  $dhcp_interfaces    = $cobbler::params::dhcp_interfaces,
-  $defaultrootpw      = $cobbler::params::defaultrootpw,
-  $apache_service     = $cobbler::params::apache_service,
-  $allow_access       = $cobbler::params::allow_access,
-  $puppet_auto_setup  = $cobbler::params::puppet_auto_setup,
-  $purge_distro       = $cobbler::params::purge_distro,
-  $purge_repo         = $cobbler::params::purge_repo,
-  $purge_profile      = $cobbler::params::purge_profile,
-  $purge_system       = $cobbler::params::purge_system,
+  $service_name       = $::cobbler::params::service_name,
+  $package_name       = $::cobbler::params::package_name,
+  $package_ensure     = $::cobbler::params::package_ensure,
+  $distro_path        = $::cobbler::params::distro_path,
+  $manage_dhcp        = $::cobbler::params::manage_dhcp,
+  $dhcp_dynamic_range = $::cobbler::params::dhcp_dynamic_range,
+  $manage_dns         = $::cobbler::params::manage_dns,
+  $dns_option         = $::cobbler::params::dns_option,
+  $dhcp_option        = $::cobbler::params::dhcp_option,
+  $manage_tftpd       = $::cobbler::params::manage_tftpd,
+  $tftpd_option       = $::cobbler::params::tftpd_option,
+  $server_ip          = $::cobbler::params::server_ip,
+  $next_server_ip     = $::cobbler::params::next_server_ip,
+  $nameservers        = $::cobbler::params::nameservers,
+  $dhcp_interfaces    = $::cobbler::params::dhcp_interfaces,
+  $dhcp_subnets       = $::cobbler::params::dhcp_subnets,
+  $defaultrootpw      = $::cobbler::params::defaultrootpw,
+  $apache_service     = $::cobbler::params::apache_service,
+  $allow_access       = $::cobbler::params::allow_access,
+  $purge_distro       = $::cobbler::params::purge_distro,
+  $purge_repo         = $::cobbler::params::purge_repo,
+  $purge_profile      = $::cobbler::params::purge_profile,
+  $purge_system       = $::cobbler::params::purge_system,
+  $default_kickstart  = $::cobbler::params::default_kickstart,
+  $webroot            = $::cobbler::params::webroot,
+  $auth_module        = $::cobbler::params::auth_module
 ) inherits cobbler::params {
 
   # require apache modules
-  require apache::mod::wsgi
-  require apache::mod::proxy
-  require apache::mod::proxy_http
+  include ::apache
+  include ::apache::mod::wsgi
+  include ::apache::mod::proxy
+  include ::apache::mod::proxy_http
 
   # install section
-  package { 'tftp-server': ensure => present, }
-  package { 'syslinux':    ensure => present, }
-  package { $package_name :
+  package { $::cobbler::params::tftp_package:     ensure => present, }
+  package { $::cobbler::params::syslinux_package: ensure => present, }
+  package { $package_name:
     ensure  => $package_ensure,
-    require => [ Package['syslinux'], Package['tftp-server'], ],
+    require => [ Package[$::cobbler::params::syslinux_package], Package[$::cobbler::params::tftp_package], ],
   }
 
   service { $service_name :
@@ -141,7 +148,7 @@ class cobbler (
     group  => root,
     mode   => '0644',
   }
-  file { '/etc/httpd/conf.d/proxy_cobbler.conf':
+  file { "${::cobbler::params::proxy_config_prefix}/proxy_cobbler.conf":
     content => template('cobbler/proxy_cobbler.conf.erb'),
     notify  => Service[$apache_service],
   }
@@ -163,8 +170,8 @@ class cobbler (
     require => Package[$package_name],
     notify  => Service[$service_name],
   }
-  file { '/etc/httpd/conf.d/distros.conf': content => template('cobbler/distros.conf.erb'), }
-  file { '/etc/httpd/conf.d/cobbler.conf': content => template('cobbler/cobbler.conf.erb'), }
+  file { "${::cobbler::params::http_config_prefix}/distros.conf": content => template('cobbler/distros.conf.erb'), }
+  file { "${::cobbler::params::http_config_prefix}/cobbler.conf": content => template('cobbler/cobbler.conf.erb'), }
 
   # cobbler sync command
   exec { 'cobblersync':
@@ -204,6 +211,11 @@ class cobbler (
       require => Package[$package_name],
       notify  => Exec['cobblersync'],
     }
+  }
+
+  # logrotate script
+  file { '/etc/logrotate.d/cobbler':
+    source => 'puppet:///modules/cobbler/logrotate',
   }
 }
 # vi:nowrap:

@@ -12,14 +12,14 @@ class cobbler::web (
 ) inherits cobbler {
   require apache::mod::ssl
 
-  package { 'cobbler-web':
+  package { $::cobbler::params::package_name_web:
     ensure => $package_ensure,
   }
-  file { '/etc/httpd/conf.d/cobbler_web.conf':
+  file { "${::cobbler::params::http_config_prefix}/cobbler_web.conf":
     ensure  => file,
     owner   => root,
     group   => root,
     mode    => '0644',
-    require => [ Package['cobbler-web'], Class['apache'], ],
+    require => [ Package[$::cobbler::params::package_name_web], Class['apache'], ],
   }
 }
