@@ -8,18 +8,20 @@
 #   to $ipaddress_eth1
 #
 define cobbler::web (
-  $package_ensure = 'present',
+  $package_ensure      = 'present',
+  $http_config_prefix  = '/etc/httpd/conf.d',
+  $package_name_web    = 'cobbler-web'
 ) {
   require apache::mod::ssl
 
-  package { $::cobbler::params::package_name_web:
+  package { $package_name_web:
     ensure => $package_ensure,
   }
-  file { "${::cobbler::params::http_config_prefix}/cobbler_web.conf":
+  file { "${http_config_prefix}/cobbler_web.conf":
     ensure  => file,
     owner   => root,
     group   => root,
     mode    => '0644',
-    require => [ Package[$::cobbler::params::package_name_web], Class['apache'], ],
+    require => [ Package[$package_name_web], Class['apache'], ],
   }
 }
