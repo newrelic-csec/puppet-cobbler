@@ -39,6 +39,7 @@ class cobbler::params {
   $webroot = '/var/www/cobbler'
 
   # general settings
+  $role           = 'primary'
   $next_server_ip = $::ipaddress
   $server_ip      = $::ipaddress
   $nameservers    = '127.0.0.1'
@@ -48,6 +49,7 @@ class cobbler::params {
 
   # dhcp options
   $manage_dhcp        = 0
+  $dhcp_template      = 'cobbler/dhcp.template.erb'
   $dhcp_option        = 'isc'
   $dhcp_interfaces    = 'eth0'
   $dhcp_subnets       = ''

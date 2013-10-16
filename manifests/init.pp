@@ -1,4 +1,4 @@
-# Class: cobbler
+# Define: cobbler
 #
 # This class manages Cobbler
 # https://fedorahosted.org/cobbler/
@@ -92,12 +92,13 @@
 #
 # Sample Usage:
 #
-class cobbler (
+define cobbler (
   $service_name       = $::cobbler::params::service_name,
   $package_name       = $::cobbler::params::package_name,
   $package_ensure     = $::cobbler::params::package_ensure,
   $distro_path        = $::cobbler::params::distro_path,
   $manage_dhcp        = $::cobbler::params::manage_dhcp,
+  $dhcp_template      = $::cobbler::params::dhcp_template,
   $dhcp_dynamic_range = $::cobbler::params::dhcp_dynamic_range,
   $manage_dns         = $::cobbler::params::manage_dns,
   $dns_option         = $::cobbler::params::dns_option,
@@ -118,8 +119,9 @@ class cobbler (
   $purge_system       = $::cobbler::params::purge_system,
   $default_kickstart  = $::cobbler::params::default_kickstart,
   $webroot            = $::cobbler::params::webroot,
-  $auth_module        = $::cobbler::params::auth_module
-) inherits cobbler::params {
+  $auth_module        = $::cobbler::params::auth_module,
+  $role               = $::cobbler::params::role
+) {
 
   # require apache modules
   include ::apache
@@ -207,7 +209,7 @@ class cobbler (
       owner   => root,
       group   => root,
       mode    => '0644',
-      content => template('cobbler/dhcp.template.erb'),
+      content => template($dhcp_template),
       require => Package[$package_name],
       notify  => Exec['cobblersync'],
     }

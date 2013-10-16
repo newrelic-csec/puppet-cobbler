@@ -1,4 +1,4 @@
-# Class: cobbler::web
+# Define: cobbler::web
 #
 # This module manages Cobbler
 # https://fedorahosted.org/cobbler/
@@ -7,9 +7,9 @@
 #   $cobbler_listen_ip be set in the nodes manifest, else defaults
 #   to $ipaddress_eth1
 #
-class cobbler::web (
+define cobbler::web (
   $package_ensure = $cobbler::package_ensure,
-) inherits cobbler {
+) {
   require apache::mod::ssl
 
   package { $::cobbler::params::package_name_web:
