@@ -5,7 +5,7 @@
 class cobbler::params {
   case $::osfamily {
     'RedHat': {
-      $service_name       = 'cobblerd'
+      $service_name        = 'cobblerd'
       $package_name        = 'cobbler'
       $package_name_web    = 'cobbler-web'
       $tftp_package        = 'tftp-server'

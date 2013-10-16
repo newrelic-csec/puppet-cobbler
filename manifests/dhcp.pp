@@ -4,9 +4,9 @@
 # https://fedorahosted.org/cobbler/
 #
 define cobbler::dhcp (
-  $nameservers     = $::cobbler::params::nameservers,
-  $dhcp_interfaces = $::cobbler::params::dhcp_interfaces,
-  $dhcp_template   = $::cobbler::params::dhcp_template,
+  $nameservers     = '127.0.0.1',
+  $dhcp_interfaces = 'eth0',
+  $dhcp_template   = 'cobbler/dhcp.template.erb',
   ) {
   package { 'dhcp':
     ensure => present,

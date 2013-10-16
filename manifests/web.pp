@@ -8,7 +8,7 @@
 #   to $ipaddress_eth1
 #
 define cobbler::web (
-  $package_ensure = $cobbler::package_ensure,
+  $package_ensure = 'present',
 ) {
   require apache::mod::ssl
 
