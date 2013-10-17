@@ -1,67 +1,124 @@
 # ******************************************************************
 # Cobbler managed dhcpd.conf file
+# Puppet managed dhcpd.template file for node: <%= fqdn %>
 #
 # generated from cobbler dhcp.conf template ($date)
 # Do NOT make changes to /etc/dhcpd.conf. Instead, make your changes
 # in /etc/cobbler/dhcp.template, as /etc/dhcpd.conf will be
 # overwritten.
 #
-# /etc/cobbler/dhcp.template is managed by puppet
-#
 # ******************************************************************
+
+authoritative;
 
 ddns-update-style interim;
 
 allow booting;
-allow bootp;
+deny bootp;
 
-ignore client-updates;
+allow client-updates;
 set vendorclass = option vendor-class-identifier;
 
-<% @dhcp_interfaces.each do |iface| -%>
-subnet <%= instance_variable_get("@ipaddress_#{iface}").match(/\d+\.\d+\.\d+/) %>.0 netmask 255.255.255.0 {
-    option domain-name          "<%= @domain %>";
-    option subnet-mask          255.255.255.0;
-    option domain-name-servers  <%=
-if @nameservers.kind_of?(Array)
-   @nameservers.join(", ")
-elsif (@nameservers.kind_of?(String) && @nameservers != '' )
-   @nameservers
-else
-   puts("127.0.0.1")
-end %>;
-    option routers              <%= instance_variable_get("@ipaddress_#{iface}").match(/\d+\.\d+\.\d+/) %>.1;
-    filename                    "/pxelinux.0";<% if @dhcp_dynamic_range == 1 then %>
-    range dynamic-bootp         <%= instance_variable_get("@ipaddress_#{iface}").match(/\d+\.\d+\.\d+/) %>.100 <%= instance_variable_get("@ipaddress_#{iface}").match(/\d+\.\d+\.\d+/) %>.200;<% end %>
-    default-lease-time          21600;
-    max-lease-time              43200;
-    next-server                 $next_server;
+<% if role == "primary" %>
+# key primaryserver {
+#         algorithm hmac-md5;
+#         secret "CHANGEME";
+# };
+#
+# omapi-key primaryserver;
+# omapi-port 7911;
+#
+# failover peer "dhcp-failover" {
+#   primary; # declare this to be the primary server
+#   address <%= ipaddress %>;
+#   port 647;
+#   peer address #{SECONDARY_IP};
+#   peer port 647;
+#   max-response-delay 30;
+#   max-unacked-updates 10;
+#   load balance max seconds 3;
+#   mclt 1800;
+#   split 128;
+# }
+
+<% elsif role == "secondary" %>
+# key secondaryserver {
+#     algorithm hmac-md5;
+#     secret "CHANGEME";
+# };
+#
+# omapi-key secondaryserver;
+# omapi-port 7911;
+#
+# failover peer "dhcp-failover" {
+#   secondary; # declare this to be the secondary server
+#   address <%= ipaddress %>;
+#   port 647;
+#   peer address  #{PRIMARY_IP};
+#   peer port 647;
+#   max-response-delay 30;
+#   max-unacked-updates 10;
+#   load balance max seconds 3;
+# }
+<% end %>
+
+<% networking_subnets.each_pair do |key, data| -%>
+subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
+
+  # DMZ
+  option routers                  <%= data['router'] %>;
+  option subnet-mask              <%= data['netmask'] %>;
+  option broadcast-address        <%= data['broadcast'] %>;
+  option domain-name              "<%= data['domainname'] %>";
+  option domain-search            "<%= data['dnssearch'] %>";
+  option domain-name-servers      <%= data['resolvers'].join(', ') %>;
+  option ntp-servers              <%= data['ntpservers'].join(', ') %>;
+  filename                        "/pxelinux.0";
+  next-server                     <%= scope.function_find_ip_in_subnet([data['cidr']]) %>;
+
+  pool  {
+    <% if role != "solitary" %>
+    failover peer              "dhcp-failover";
+    <% end %>
+    <% data['ranges'].each do |range| -%>
+    range                      <%= range %>;
+    <% end -%>
+    max-lease-time             7200;
+    default-lease-time         3600;
+    allow                      unknown-clients;
+  }
+
+#for dhcp_tag in $dhcp_tags.keys():
+#if $dhcp_tag == "vlan<%= data['vlanid'] %>"
+# hosts for Cobbler DHCP tag: $dhcp_tag
+        #for mac in $dhcp_tags[$dhcp_tag].keys():
+            #set iface = $dhcp_tags[$dhcp_tag][$mac]
+  host $iface.name {
+    hardware ethernet $mac;
+    #if $iface.ip_address:
+    fixed-address $iface.ip_address;
+    #end if
+    #if $iface.hostname:
+    option host-name "$iface.hostname";
+    #end if
+    #if $iface.netmask:
+    option subnet-mask $iface.netmask;
+    #end if
+    #if $iface.gateway:
+    option routers $iface.gateway;
+    #end if
+    filename "$iface.filename";
+  }
+  #end for
+#end if
+#end for
+
 }
-<% end -%>
-<% if @dhcp_subnets != '' -%>
-<% @dhcp_subnets.each do |dhcp_subnet| -%>
-<% dhcp_subnet_split   = dhcp_subnet.split('/') -%>
-subnet <%= dhcp_subnet_split[0] %> netmask <%= dhcp_subnet_split[1] %> {
-    option domain-name          "<%= @domain %>";
-    option subnet-mask          <%= dhcp_subnet_split[1]%>;
-    option domain-name-servers  <%=
-if @nameservers.kind_of?(Array)
-   @nameservers.join(", ")
-elsif (@nameservers.kind_of?(String) && @nameservers != '' )
-   @nameservers
-else
-   puts("127.0.0.1")
-end %>;
-    option routers              <%= dhcp_subnet_split[0].match(/\d+\.\d+\.\d+/) %>.<%= dhcp_subnet_split[0].sub(/\d+\.\d+\.\d+\./, '').to_i + 1 %>;
-    filename                    "/pxelinux.0";
-    default-lease-time          21600;
-    max-lease-time              43200;
-    next-server                 $next_server;
-}
-<% end -%>
+
 <% end -%>
 
 #for dhcp_tag in $dhcp_tags.keys():
+#if $dhcp_tag == "default"
     ## group could be subnet if your dhcp tags line up with your subnets
     ## or really any valid dhcpd.conf construct ... if you only use the
     ## default dhcp tag in cobbler, the group block can be deleted for a
@@ -78,13 +135,14 @@ group {
         #if $iface.hostname:
         option host-name "$iface.hostname";
         #end if
-        #if $iface.subnet:
-        option subnet-mask $iface.subnet;
+        #if $iface.netmask:
+        option subnet-mask $iface.netmask;
         #end if
         #if $iface.gateway:
         option routers $iface.gateway;
         #end if
         filename "$iface.filename";
+        ##
         ## Cobbler defaults to $next_server, but some users
         ## may like to use $iface.system.server for proxied setups
         next-server $next_server;
@@ -92,5 +150,5 @@ group {
     }
         #end for
 }
+#end if
 #end for
-

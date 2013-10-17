@@ -94,37 +94,59 @@
 #
 define cobbler (
   $defaultrootpw,
-  $service_name        = 'cobblerd',
-  $package_name        = 'cobbler',
-  $package_ensure      = 'present',
-  $distro_path         = '/distro',
-  $manage_dhcp         = 0,
-  $dhcp_template       = 'cobbler/dhcp.template.erb',
-  $dhcp_dynamic_range  = 0,
-  $manage_dns          = 0,
-  $dns_option          = 'dnsmasq',
-  $dhcp_option         = 'isc',
-  $manage_tftpd        = 1,
-  $tftpd_option        = 'in_tftpd',
-  $server_ip           = $::ipaddress,
-  $next_server_ip      = $::ipaddress,
-  $nameservers         = '127.0.0.1',
-  $dhcp_interfaces     = 'eth0',
-  $dhcp_subnets        = '',
-  $apache_service      = 'httpd',
-  $allow_access        = "${server_ip} ${::ipaddress} 127.0.0.1",
-  $purge_distro        = false,
-  $purge_repo          = false,
-  $purge_profile       = false,
-  $purge_system        = false,
-  $default_kickstart   = '/var/lib/cobbler/kickstarts/default.ks',
-  $webroot             = '/var/www/cobbler',
-  $http_config_prefix  = '/etc/httpd/conf.d',
-  $proxy_config_prefix = '/etc/httpd/conf.d',
-  $auth_module         = 'authn_denyall',
-  $role                = 'primary',
-  $tftp_package        = 'tftp-server',
-  $syslinux_package    = 'syslinux'
+  $service_name                    = 'cobblerd',
+  $package_name                    = 'cobbler',
+  $package_ensure                  = 'present',
+  $distro_path                     = '/distro',
+  $manage_dhcp                     = 0,
+  $dhcp_template                   = 'cobbler/dhcp.template.erb',
+  $dhcp_dynamic_range              = 0,
+  $manage_dns                      = 0,
+  $dns_option                      = 'dnsmasq',
+  $dhcp_option                     = 'isc',
+  $manage_tftpd                    = 1,
+  $tftpd_option                    = 'in_tftpd',
+  $server_ip                       = $::ipaddress,
+  $next_server_ip                  = $::ipaddress,
+  $nameservers                     = '127.0.0.1',
+  $dhcp_interfaces                 = 'eth0',
+  $dhcp_subnets                    = '',
+  $apache_service                  = 'httpd',
+  $allow_access                    = "${server_ip} ${::ipaddress} 127.0.0.1",
+  $reporting_enabled               = 1,
+  $reporting_sender                = "Cobbler Server - ${::ipaddress}",
+  $reporting_email                 = "root",
+  $register_new_installs           = 0,
+  $pretty_json                     = 0,
+  $scm_enabled                     = 0,
+  $keep_repos                      = 1,
+  $purge_distro                    = false,
+  $purge_repo                      = false,
+  $purge_profile                   = false,
+  $purge_system                    = false,
+  $puppet_auto_setup               = 1,
+  $sign_puppet_certs_automatically = 1,
+  $default_kickstart               = '/var/lib/cobbler/kickstarts/default.ks',
+  $webroot                         = '/var/www/cobbler',
+  $http_config_prefix              = '/etc/httpd/conf.d',
+  $proxy_config_prefix             = '/etc/httpd/conf.d',
+  $authn_module                    = 'authn_denyall',
+  $authz_module                    = 'authz_allowall',
+  $role                            = 'primary',
+  $tftp_package                    = 'tftp-server',
+  $syslinux_package                = 'syslinux',
+  $ldap_server                     = "example.com",
+  $ldap_base_dn                    = "DC=example,DC=com",
+  $ldap_port                       = 389,
+  $ldap_tls_enabled                = 0,
+  $ldap_anonymous_enabled          = 1,
+  $ldap_bind_dn                    = '',
+  $ldap_bind_passwd                = '',
+  $ldap_search_prefix              = 'uid=',
+  $ldap_tls_cacert                 = '',
+  $ldap_tls_key                    = '',
+  $ldap_tls_cert                   = '',
+  $admin_users                     = ['admin','cobbler']
 ) {
 
   # require apache modules
@@ -134,6 +156,12 @@ define cobbler (
   include ::apache::mod::proxy_http
 
   # install section
+  if ! defined(Package['python-ldap']) {
+    package { 'python-ldap':     ensure => present, }
+  }
+  if ! defined(Package['git']) {
+    package { 'git':             ensure => present, }
+  }
   package { $tftp_package:     ensure => present, }
   package { $syslinux_package: ensure => present, }
   package { $package_name:
@@ -173,6 +201,11 @@ define cobbler (
   }
   file { '/etc/cobbler/modules.conf':
     content => template('cobbler/modules.conf.erb'),
+    require => Package[$package_name],
+    notify  => Service[$service_name],
+  }
+  file { '/etc/cobbler/users.conf':
+    content => template('cobbler/users.conf.erb'),
     require => Package[$package_name],
     notify  => Service[$service_name],
   }

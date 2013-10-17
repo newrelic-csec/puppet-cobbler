@@ -45,11 +45,11 @@ authn_pam_service: "login"
 # email: which addresses to email
 # smtp_server: used to specify another server for an MTA
 # subject: use the default subject unless overridden
-build_reporting_enabled: 0
-build_reporting_sender: ""
-build_reporting_email: [ 'root@localhost' ]
+build_reporting_enabled: <%= @reporting_enabled %>
+build_reporting_sender: "<%= @reporting_sender %>"
+build_reporting_email: [ '<%= @reporting_email %>' ]
 build_reporting_smtp_server: "localhost"
-build_reporting_subject: ""
+build_reporting_subject: "Cobbler Build Report"
 
 # Cheetah-language kickstart templates can import Python modules.
 # while this is a useful feature, it is not safe to allow them to 
@@ -94,7 +94,7 @@ default_ownership:
 # The simplest way to change the password is to run 
 # openssl passwd -1
 # and put the output between the "" below.
-default_password_crypted: "$1$mF86/UHC$WvcIcX2t6crBz2onWxyac."
+default_password_crypted: "<%= @defaultrootpw %>"
 
 # the default template type to use in the absence of any
 # other detected template. If you do not specify the template 
@@ -111,19 +111,19 @@ default_template_type: "cheetah"
 # "virbr0".  This can be overriden on a per-profile
 # basis or at the koan command line though this saves
 # typing to just set it here to the most common option.
-default_virt_bridge: xenbr0
+default_virt_bridge: virbr0
 
 # use this as the default disk size for virt guests (GB)
-default_virt_file_size: 5
+default_virt_file_size: 15
 
 # use this as the default memory size for virt guests (MB)
-default_virt_ram: 512
+default_virt_ram: 1024
 
 # if koan is invoked without --virt-type and no virt-type
 # is set on the profile/system, what virtualization type
 # should be assumed?  Values: xenpv, xenfv, qemu, vmware
 # (NOTE: this does not change what virt_type is chosen by import)
-default_virt_type: xenpv
+default_virt_type: qemu
 
 # enable gPXE booting? Enabling this option will cause cobbler
 # to copy the undionly.kpxe file to the tftp root directory, 
@@ -334,7 +334,7 @@ redhat_management_permissive: 0
 # to be used to remotely add new cobbler system records to cobbler.
 # this effectively allows for registration of new hardware from system
 # records.
-register_new_installs: 0
+register_new_installs: <%= @register_new_installs %>
 
 # Flags to use for yum's reposync.  If your version of yum reposync
 # does not support -l, you may need to remove that option.
@@ -371,7 +371,7 @@ run_install_triggers: 1
 # to revert to previous database versions, generate RSS feeds, or for
 # other auditing or backup purposes. "git" and "hg" are currently suported, 
 # but git is the recommend SCM for use with this feature.
-scm_track_enabled: 0
+scm_track_enabled: <%= @scm_enabled %>
 scm_track_mode: "git"
 
 # this is the address of the cobbler server -- as it is used
@@ -425,7 +425,7 @@ xmlrpc_port: 25151
 # this as 0.  In that case, the cobbler mirrored yum repos are still
 # accessable at http://cobbler.example.org/cblr/repo_mirror and yum
 # configuration can still be done manually.  This is just a shortcut.
-yum_post_install_mirror: 1
+yum_post_install_mirror: <%= @keep_repos %>
 
 # the default yum priority for all the distros.  This is only used
 # if yum-priorities plugin is used.  1=maximum.  Tweak with caution.
@@ -436,4 +436,4 @@ yum_distro_priority: 1
 yumdownloader_flags: "--resolve"
 
 # sort and indent JSON output to make it more human-readable
-serializer_pretty_json: 0
+serializer_pretty_json: <%= @pretty_json %>
