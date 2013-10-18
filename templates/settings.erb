@@ -177,17 +177,17 @@ kernel_options_s390x:
 # configuration options if using the authn_ldap module. See the
 # the Wiki for details.  This can be ignored if you are not using
 # LDAP for WebUI/XMLRPC authentication.
-ldap_server: "ldap.example.com"
-ldap_base_dn: "DC=example,DC=com"
-ldap_port: 389
-ldap_tls: 1
-ldap_anonymous_bind: 1
-ldap_search_bind_dn: ''
-ldap_search_passwd: ''
-ldap_search_prefix: 'uid='
-ldap_tls_cacertfile: ''
-ldap_tls_keyfile: ''
-ldap_tls_certfile: ''
+ldap_server: "<%= @ldap_server %>"
+ldap_base_dn: "<%= @ldap_base_dn %>"
+ldap_port: <%= @ldap_port %>
+ldap_tls: <%= @ldap_tls_enabled %>
+ldap_anonymous_bind: <%= @ldap_anonymous_enabled %>
+ldap_search_bind_dn: '<%= @ldap_bind_dn %>'
+ldap_search_passwd: '<%= @ldap_bind_passwd %>'
+ldap_search_prefix: '<%= @ldap_search_prefix %>'
+ldap_tls_cacertfile: '<%= @ldap_tls_cacert %>'
+ldap_tls_keyfile: '<%= @ldap_tls_key %>'
+ldap_tls_certfile: '<%= @ldap_tls_cert %>'
 
 # cobbler has a feature that allows for integration with config management
 # systems such as Puppet.  The following parameters work in conjunction with 
