@@ -128,6 +128,7 @@ define cobbler (
   $sign_puppet_certs_automatically = 1,
   $default_kickstart               = '/var/lib/cobbler/kickstarts/default.ks',
   $webroot                         = '/var/www/cobbler',
+  $www_html_dir                    = '/var/www/html',
   $http_config_prefix              = '/etc/httpd/conf.d',
   $proxy_config_prefix             = '/etc/httpd/conf.d',
   $authn_module                    = 'authn_denyall',
@@ -150,10 +151,41 @@ define cobbler (
 ) {
 
   # require apache modules
-  include ::apache
-  include ::apache::mod::wsgi
-  include ::apache::mod::proxy
-  include ::apache::mod::proxy_http
+  if ! defined(Class['apache']) {
+    class { 'apache':
+      default_mods      => false,
+      default_vhost     => false,
+      default_ssl_vhost => true,
+    }
+  }
+  file { "${http_config_prefix}/15-default.conf":
+    content => template('cobbler/15-default.conf.erb'),
+    notify  => Service[$apache_service],
+  }
+  if ! defined(Class['apache::mod::rewrite']) {
+    class { 'apache::mod::rewrite':
+    }
+  }
+  if ! defined(Class['apache::mod::setenvif']) {
+    class { 'apache::mod::setenvif':
+    }
+  }
+  if ! defined(Class['apache::mod::mime']) {
+    class { 'apache::mod::mime':
+    }
+  }
+  if ! defined(Class['apache::mod::wsgi']) {
+    class { 'apache::mod::wsgi':
+    }
+  }
+  if ! defined(Class['apache::mod::proxy']) {
+    class { 'apache::mod::proxy':
+    }
+  }
+  if ! defined(Class['apache::mod::proxy_http']) {
+    class { 'apache::mod::proxy_http':
+    }
+  }
 
   # install section
   if ! defined(Package['python-ldap']) {
@@ -166,7 +198,7 @@ define cobbler (
   package { $syslinux_package: ensure => present, }
   package { $package_name:
     ensure  => $package_ensure,
-    require => [ Package[$syslinux_package], Package[$tftp_package], ],
+    require => [ Package[$syslinux_package], Package[$tftp_package], Package['python-ldap'], Package['git'] ],
   }
 
   service { $service_name :
@@ -209,13 +241,26 @@ define cobbler (
     require => Package[$package_name],
     notify  => Service[$service_name],
   }
-  file { "${http_config_prefix}/distros.conf": content => template('cobbler/distros.conf.erb'), }
-  file { "${http_config_prefix}/cobbler.conf": content => template('cobbler/cobbler.conf.erb'), }
+  file { "${http_config_prefix}/distros.conf":
+    content => template('cobbler/distros.conf.erb'),
+    notify  => Service[$apache_service],
+  }
+  file { "${http_config_prefix}/cobbler.conf":
+    content => template('cobbler/cobbler.conf.erb'),
+    notify  => Service[$apache_service],
+  }
+  if ! defined(File["${www_html_dir}/index.html"]) {
+    file { "${www_html_dir}/index.html":
+      content => template('cobbler/index.html.erb'),
+      require => Service[$apache_service],
+    }
+  }
 
   # cobbler sync command
   exec { 'cobblersync':
     command     => '/usr/bin/cobbler sync',
     refreshonly => true,
+    require => Service[$service_name],
   }
 
   # purge resources
@@ -256,5 +301,6 @@ define cobbler (
   file { '/etc/logrotate.d/cobbler':
     source => 'puppet:///modules/cobbler/logrotate',
   }
+
 }
 # vi:nowrap:
