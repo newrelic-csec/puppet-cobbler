@@ -4,3 +4,4 @@
 # Local modifications will be over-written
 
 /usr/bin/cobbler reposync --tries=3 --no-fail
+/usr/bin/cobbler hardlink
