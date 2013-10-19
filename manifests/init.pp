@@ -329,6 +329,7 @@ define cobbler (
     }
     service { 'dhcpd':
       ensure  => running,
+      enable  => true,
       require => Package['dhcp'],
     }
     file { '/etc/cobbler/dhcp.template':
