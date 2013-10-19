@@ -105,6 +105,7 @@ define cobbler (
   $dns_option                      = 'dnsmasq',
   $dhcp_option                     = 'isc',
   $manage_tftpd                    = 1,
+  $manage_rsync                    = 1,
   $tftpd_option                    = 'in_tftpd',
   $server_ip                       = $::ipaddress,
   $next_server_ip                  = $::ipaddress,
@@ -191,20 +192,46 @@ define cobbler (
   if ! defined(Package['python-ldap']) {
     package { 'python-ldap':     ensure => present, }
   }
+  if ! defined(Package['xinetd']) {
+    package { 'xinetd':     ensure => present, }
+  }
   if ! defined(Package['git']) {
     package { 'git':             ensure => present, }
+  }
+  if ! defined(Package['debmirror']) {
+    package { 'debmirror':             ensure => present, }
+  }
+  if ! defined(Package['pykickstart']) {
+    package { 'pykickstart':             ensure => present, }
+  }
+  if ! defined(Package['hardlink']) {
+    package { 'hardlink':             ensure => present, }
+  }
+  if ! defined(Package['cman']) {
+    package { 'cman':             ensure => present, }
+  }
+  if ! defined(Package['fence-agents']) {
+    package { 'fence-agents':             ensure => present, }
   }
   package { $tftp_package:     ensure => present, }
   package { $syslinux_package: ensure => present, }
   package { $package_name:
     ensure  => $package_ensure,
-    require => [ Package[$syslinux_package], Package[$tftp_package], Package['python-ldap'], Package['git'] ],
+    require => [ Package[$syslinux_package], Package[$tftp_package], Package['python-ldap'], Package['xinetd'], Package['git'] ],
   }
 
   service { $service_name :
     ensure  => running,
     enable  => true,
     require => Package[$package_name],
+  }
+
+  if ! defined(Service['xinetd']) {
+    service { 'xinetd' :
+      ensure  => running,
+      enable  => true,
+      require => Package['xinetd'],
+    }
   }
 
   # file defaults
@@ -217,6 +244,14 @@ define cobbler (
   file { "${proxy_config_prefix}/proxy_cobbler.conf":
     content => template('cobbler/proxy_cobbler.conf.erb'),
     notify  => Service[$apache_service],
+  }
+  file { "/etc/xinetd.d/rsync":
+    source => 'puppet:///modules/cobbler/xinetd-rsync',
+    notify  => Service['xinetd'],
+  }
+  file { "/etc/debmirror.conf":
+    source => 'puppet:///modules/cobbler/debmirror.conf',
+    require => Package['debmirror'],
   }
   file { $distro_path :
     ensure => directory,
@@ -260,7 +295,16 @@ define cobbler (
   exec { 'cobblersync':
     command     => '/usr/bin/cobbler sync',
     refreshonly => true,
-    require => Service[$service_name],
+    require     => Service[$service_name],
+    notify      => Exec['cobblerget-loaders'],
+  }
+
+  # cobbler get-loaders command
+  # We really only need to run this once, but it won't hurt.
+  exec { 'cobblerget-loaders':
+    command     => '/usr/bin/cobbler get-loaders --force',
+    refreshonly => true,
+    require     => Service[$service_name],
   }
 
   # purge resources
@@ -300,6 +344,12 @@ define cobbler (
   # logrotate script
   file { '/etc/logrotate.d/cobbler':
     source => 'puppet:///modules/cobbler/logrotate',
+  }
+
+  # cobbler reposync cron script
+  file { '/etc/cron.daily/cobbler-reposync':
+    source => 'puppet:///modules/cobbler/cobbler-reposync.cron',
+    mode   => '0755',
   }
 
 }
