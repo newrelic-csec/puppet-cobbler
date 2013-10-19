@@ -69,7 +69,7 @@ cheetah_import_whitelist:
 # enables working with Fedora repos from F11/F12 from EL-4 or
 # EL-5 without python-hashlib installed (which is not available
 # on EL-4)
-createrepo_flags: "-c cache -s sha"
+createrepo_flags: "<%= @createrepo_flags %>"
 
 # if no kickstart is specified to profile add, use this template
 default_kickstart: <%= @default_kickstart %>

@@ -127,6 +127,7 @@ define cobbler (
   $purge_system                    = false,
   $puppet_auto_setup               = 1,
   $sign_puppet_certs_automatically = 1,
+  $createrepo_flags                = '-c cache -s sha',
   $default_kickstart               = '/var/lib/cobbler/kickstarts/default.ks',
   $webroot                         = '/var/www/cobbler',
   $www_html_dir                    = '/var/www/html',
