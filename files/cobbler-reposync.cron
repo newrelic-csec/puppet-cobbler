@@ -9,6 +9,3 @@
 
 #run reposync to update repos
 /usr/bin/cobbler reposync --tries=3 --no-fail &>> /dev/null
-
-#run hardlink to save space
-/usr/bin/cobbler hardlink &>> /dev/null; true
