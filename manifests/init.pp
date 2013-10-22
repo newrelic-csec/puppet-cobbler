@@ -164,6 +164,10 @@ define cobbler (
     content => template('cobbler/15-default.conf.erb'),
     notify  => Service[$apache_service],
   }
+  if ! defined(Class['apache::mod::autoindex']) {
+    class { 'apache::mod::autoindex':
+    }
+  }
   if ! defined(Class['apache::mod::rewrite']) {
     class { 'apache::mod::rewrite':
     }
