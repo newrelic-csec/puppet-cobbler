@@ -11,12 +11,12 @@
 
 authoritative;
 
-ddns-update-style interim;
-
 allow booting;
 deny bootp;
 
+ddns-update-style ad-hoc;
 ignore client-updates;
+
 set vendorclass = option vendor-class-identifier;
 
 <% if role == "primary" %>
