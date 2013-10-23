@@ -65,7 +65,6 @@ set vendorclass = option vendor-class-identifier;
 <% networking_subnets.each_pair do |key, data| -%>
 subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
 
-  # DMZ
   option routers                  <%= data['router'] %>;
   option subnet-mask              <%= data['netmask'] %>;
   option broadcast-address        <%= data['broadcast'] %>;
