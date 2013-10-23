@@ -155,7 +155,7 @@ define cobbler (
   # require apache modules
   if ! defined(Class['apache']) {
     class { 'apache':
-      default_mods      => false,
+      default_mods      => true,
       default_vhost     => false,
       default_ssl_vhost => true,
     }
@@ -163,22 +163,6 @@ define cobbler (
   file { "${http_config_prefix}/15-default.conf":
     content => template('cobbler/15-default.conf.erb'),
     notify  => Service[$apache_service],
-  }
-  if ! defined(Class['apache::mod::autoindex']) {
-    class { 'apache::mod::autoindex':
-    }
-  }
-  if ! defined(Class['apache::mod::rewrite']) {
-    class { 'apache::mod::rewrite':
-    }
-  }
-  if ! defined(Class['apache::mod::setenvif']) {
-    class { 'apache::mod::setenvif':
-    }
-  }
-  if ! defined(Class['apache::mod::mime']) {
-    class { 'apache::mod::mime':
-    }
   }
   if ! defined(Class['apache::mod::wsgi']) {
     class { 'apache::mod::wsgi':
