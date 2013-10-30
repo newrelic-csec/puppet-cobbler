@@ -23,7 +23,7 @@ allow_duplicate_macs: 0
 # a restart of the cobblerd daemon. You can only change this variable
 # by manually editing the settings file, and you MUST restart cobblerd
 # after changing it.
-allow_dynamic_settings: 0
+allow_dynamic_settings: 1
 
 # by default, installs are *not* set to send installation logs to the cobbler
 # # # server.  With 'anamon_enabled', kickstart templates may use the pre_anamon
@@ -220,7 +220,7 @@ puppetca_path: "/usr/bin/puppet"
 # installed is removed from the puppet master server if the puppet
 # master server is running on the same machine as cobbler. This
 # requires puppet_auto_setup above to be enabled
-remove_old_puppet_certs_automatically: <%= @sign_puppet_certs_automatically %>
+remove_old_puppet_certs_automatically: <%= @remove_old_puppet_certs_automatically %>
 
 # choose a --server argument when running puppetd/puppet agent during kickstart
 #puppet_server: 'puppet'
