@@ -73,7 +73,8 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
   option domain-name-servers      <%= data['resolvers'].join(', ') %>;
   option ntp-servers              <%= data['ntpservers'].join(', ') %>;
   filename                        "/pxelinux.0";
-  next-server                     <%= scope.function_find_ip_in_subnet([data['cidr']]) %>;
+  #next-server                     <%= scope.function_find_ip_in_subnet([data['cidr']]) %>;
+  next-server                     <%= ::ipaddress %>;
 
   pool  {
     <% if role != "solitary" %>
