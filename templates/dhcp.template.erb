@@ -73,7 +73,7 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
   option domain-name-servers      <%= data['resolvers'].join(', ') %>;
   option ntp-servers              <%= data['ntpservers'].join(', ') %>;
   filename                        "/pxelinux.0";
-  next-server                     <%= ::ipaddress %>;
+  next-server                     <%= ipaddress %>;
 
   pool  {
     <% if role != "solitary" %>
