@@ -87,6 +87,19 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
     allow                      unknown-clients;
   }
 
+  on commit {
+      set clientip = binary-to-ascii(10, 8, ".", leased-address);
+      set clientmac = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+      set leasetime = binary-to-ascii(10,32,"",encode-int(lease-time,32));
+      set vendorclass = option vendor-class-identifier;
+      set ddns-hostname = pick-first-value(
+          option fqdn.hostname,
+          option host-name,
+          concat( "dhcp-", binary-to-ascii(10, 8, "-",
+          suffix(leased-address, 2))));
+      execute("/usr/bin/logger", "-p", "user.info", "-t", "dhcpd", clientip, clientmac, vendorclass, ddns-hostname, leasetime);
+  }
+
 #for dhcp_tag in $dhcp_tags.keys():
 #if $dhcp_tag == "vlan<%= data['vlanid'] %>"
 # hosts for Cobbler DHCP tag: $dhcp_tag

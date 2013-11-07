@@ -203,6 +203,9 @@ define cobbler (
   if ! defined(Package['fence-agents']) {
     package { 'fence-agents':             ensure => present, }
   }
+  if ! defined(Package['util-linux-ng']) {
+    package { 'util-linux-ng':             ensure => present, }
+  }
   package { $tftp_package:     ensure => present, }
   package { $syslinux_package: ensure => present, }
   package { $package_name:
