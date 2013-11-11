@@ -82,8 +82,8 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
     <% data['ranges'].each do |range| -%>
     range                      <%= range %>;
     <% end -%>
-    max-lease-time             7200;
-    default-lease-time         3600;
+    max-lease-time             <%= @maxlease %>;
+    default-lease-time         <%= @deflease %>;
     allow                      unknown-clients;
   }
 

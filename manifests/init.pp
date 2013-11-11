@@ -112,6 +112,8 @@ define cobbler (
   $nameservers                           = '127.0.0.1',
   $dhcp_interfaces                       = 'eth0',
   $dhcp_subnets                          = '',
+  $maxlease                              = 86400,
+  $deflease                              = 172800,
   $apache_service                        = 'httpd',
   $allow_access                          = "${server_ip} ${::ipaddress} 127.0.0.1",
   $reporting_enabled                     = 1,
