@@ -155,7 +155,12 @@ define cobbler (
   $ldap_tls_cacert                       = '',
   $ldap_tls_key                          = '',
   $ldap_tls_cert                         = '',
-  $admin_users                           = ['admin','cobbler']
+  $admin_users                           = ['admin','cobbler'],
+  $primary_server_ip                     = '127.0.0.1',
+  $secondary_server_ip                   = '127.0.0.1',
+  $omapi_key                             = 'changeme',
+  $enable_on_commit_hook                 = false,
+  $on_commit_hook                        = ['"/usr/bin/logger"', '"-p"', '"user.info"', '"-t"', '"dhcpd"', 'clientip', 'clientmac', 'vendorclass', 'ddns-hostname', 'leasetime']
 ) {
 
   # require apache modules

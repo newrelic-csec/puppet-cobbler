@@ -19,47 +19,38 @@ ignore client-updates;
 
 set vendorclass = option vendor-class-identifier;
 
-<% if role == "primary" %>
-# key primaryserver {
-#         algorithm hmac-md5;
-#         secret "CHANGEME";
-# };
-#
-# omapi-key primaryserver;
-# omapi-port 7911;
-#
-# failover peer "dhcp-failover" {
-#   primary; # declare this to be the primary server
-#   address <%= ipaddress %>;
-#   port 647;
-#   peer address #{SECONDARY_IP};
-#   peer port 647;
-#   max-response-delay 30;
-#   max-unacked-updates 10;
-#   load balance max seconds 3;
-#   mclt 1800;
-#   split 128;
-# }
+key omapi_key {
+  algorithm hmac-md5;
+  secret "<%= @omapi_key %>";
+};
 
+omapi-key omapi_key;
+omapi-port 7911;
+
+<% if role == "primary" %>
+failover peer "dhcp-failover" {
+  primary; # declare this to be the primary server
+  address <%= ipaddress %>;
+  port 647;
+  peer address <%= @secondary_server_ip %>;
+  peer port 647;
+  max-response-delay 30;
+  max-unacked-updates 10;
+  load balance max seconds 3;
+  mclt 1800;
+  split 128;
+}
 <% elsif role == "secondary" %>
-# key secondaryserver {
-#     algorithm hmac-md5;
-#     secret "CHANGEME";
-# };
-#
-# omapi-key secondaryserver;
-# omapi-port 7911;
-#
-# failover peer "dhcp-failover" {
-#   secondary; # declare this to be the secondary server
-#   address <%= ipaddress %>;
-#   port 647;
-#   peer address  #{PRIMARY_IP};
-#   peer port 647;
-#   max-response-delay 30;
-#   max-unacked-updates 10;
-#   load balance max seconds 3;
-# }
+failover peer "dhcp-failover" {
+  secondary; # declare this to be the secondary server
+  address <%= ipaddress %>;
+  port 647;
+  peer address  <%= @primary_server_ip %>;
+  peer port 647;
+  max-response-delay 30;
+  max-unacked-updates 10;
+  load balance max seconds 3;
+}
 <% end %>
 
 <% networking_subnets.each_pair do |key, data| -%>
@@ -87,6 +78,7 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
     allow                      unknown-clients;
   }
 
+  <% if scope.function_any2bool([@enable_on_commit_hook]) == true %>
   on commit {
       set clientip = binary-to-ascii(10, 8, ".", leased-address);
       set clientmac = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
@@ -97,8 +89,9 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
           option host-name,
           concat( "dhcp-", binary-to-ascii(10, 8, "-",
           suffix(leased-address, 2))));
-      execute("/usr/bin/logger", "-p", "user.info", "-t", "dhcpd", clientip, clientmac, vendorclass, ddns-hostname, leasetime);
+      execute(<%= @on_commit_hook.join(', ') %>);
   }
+  <% end %>
 
 #for dhcp_tag in $dhcp_tags.keys():
 #if $dhcp_tag == "vlan<%= data['vlanid'] %>"
