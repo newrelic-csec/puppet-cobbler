@@ -17,7 +17,7 @@ deny bootp;
 ddns-update-style ad-hoc;
 ignore client-updates;
 
-set vendorclass = option vendor-class-identifier;
+set vendorclass = pick-first-value(option vendor-class-identifier, "UNKNOWN");
 
 key omapi_key {
   algorithm hmac-md5;
@@ -83,7 +83,7 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
       set clientip = binary-to-ascii(10, 8, ".", leased-address);
       set clientmac = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
       set leasetime = binary-to-ascii(10,32,"",encode-int(lease-time,32));
-      set vendorclass = option vendor-class-identifier;
+      set vendorclass = pick-first-value(option vendor-class-identifier, "UNKNOWN");
       set ddns-hostname = pick-first-value(
           option fqdn.hostname,
           option host-name,
