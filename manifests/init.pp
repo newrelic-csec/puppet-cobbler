@@ -158,6 +158,8 @@ define cobbler (
   $admin_users                           = ['admin','cobbler'],
   $primary_server_ip                     = '127.0.0.1',
   $secondary_server_ip                   = '127.0.0.1',
+  $replication_user                      = 'root',
+  $replication_pkey_path                 = '/root/.ssh/id_rsa',
   $omapi_key                             = 'changeme',
   $enable_on_commit_hook                 = false,
   $on_commit_hook                        = ['"/usr/bin/logger"', '"-p"', '"user.info"', '"-t"', '"dhcpd"', 'clientip', 'clientmac', 'vendorclass', 'ddns-hostname', 'leasetime']
@@ -354,6 +356,26 @@ define cobbler (
   file { '/etc/cron.daily/cobbler-reposync':
     source => 'puppet:///modules/cobbler/cobbler-reposync.cron',
     mode   => '0755',
+  }
+
+  if role == "primary" {
+
+    file { '/usr/local/bin/cobbler-replicate':
+      ensure  => present,
+      owner   => root,
+      group   => root,
+      mode    => '0770',
+      content => template('cobbler/cobbler-replicate.sh.erb'),
+      require => User[$replication_user],
+    }
+
+    # cobbler replicate cron script
+    file { '/etc/cron.daily/cobbler-replicate':
+      source  => 'puppet:///modules/cobbler/cobbler-replicate.cron',
+      mode    => '0755',
+      require => File['/usr/local/bin/cobbler-replicate'],
+    }
+
   }
 
 }
