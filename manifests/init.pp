@@ -358,7 +358,8 @@ define cobbler (
     mode   => '0755',
   }
 
-  if $role == "primary" {
+
+  if $role != "solitary" {
 
     file { '/usr/local/bin/cobbler-replicate':
       ensure  => present,
@@ -368,6 +369,10 @@ define cobbler (
       content => template('cobbler/cobbler-replicate.sh.erb'),
       require => User[$replication_user],
     }
+
+  }
+
+  if $role == "primary" {
 
     # cobbler replicate cron script
     file { '/etc/cron.daily/cobbler-replicate':

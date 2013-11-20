@@ -7,6 +7,10 @@
 # server. You need to create a private/public key-pair on the master and
 # add the public key to ~/.ssh/authorized_keys on the slave
 
+<% if role == "primary" %>
 ssh -oStrictHostKeyChecking=no -oBatchMode=yes -i <%= @replication_pkey_path %> <%= @replication_user %>@<%= @secondary_server_ip %> "/usr/bin/sudo /usr/bin/cobbler replicate --master=<%= @ipaddress %> --sync-all --prune"
 ssh -oStrictHostKeyChecking=no -oBatchMode=yes -i <%= @replication_pkey_path %> <%= @replication_user %>@<%= @secondary_server_ip %> "/usr/bin/sudo /usr/bin/cobbler sync"
-
+<% elsif role == "secondary" %>
+/usr/bin/sudo /usr/bin/cobbler replicate --master=<%= @ipaddress %> --sync-all --prune
+/usr/bin/sudo /usr/bin/cobbler sync
+<% end %>
