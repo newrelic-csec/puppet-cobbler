@@ -141,7 +141,7 @@ define cobbler (
   $proxy_config_prefix                   = '/etc/httpd/conf.d',
   $authn_module                          = 'authn_denyall',
   $authz_module                          = 'authz_allowall',
-  $role                                  = 'primary',
+  $role                                  = 'solitary',
   $tftp_package                          = 'tftp-server',
   $syslinux_package                      = 'syslinux',
   $ldap_server                           = "example.com",
@@ -358,7 +358,7 @@ define cobbler (
     mode   => '0755',
   }
 
-  if role == "primary" {
+  if $role == "primary" {
 
     file { '/usr/local/bin/cobbler-replicate':
       ensure  => present,
