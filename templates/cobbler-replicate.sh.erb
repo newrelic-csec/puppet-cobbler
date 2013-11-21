@@ -8,8 +8,12 @@
 # add the public key to ~/.ssh/authorized_keys on the slave
 
 <% if role == "primary" %>
-ssh -t -oStrictHostKeyChecking=no -oBatchMode=yes -i <%= @replication_pkey_path %> <%= @replication_user %>@<%= @secondary_server_ip %> "/usr/bin/sudo /usr/local/bin/cobbler-replicate"
+ssh -t -t -oStrictHostKeyChecking=no -oBatchMode=yes -i <%= @replication_pkey_path %> <%= @replication_user %>@<%= @secondary_server_ip %> "/usr/bin/sudo /usr/local/bin/cobbler-replicate"
 <% elsif role == "secondary" %>
-/usr/bin/sudo /usr/bin/cobbler replicate --master=<%= @primary_server_ip %> --sync-all --prune
-/usr/bin/sudo /usr/bin/cobbler sync
+/bin/ps auxwwwwww | /bin/grep -v grep | /bin/grep -q "cobbler replicate"
+if [ $? -eq 1 ]; then
+  /usr/bin/sudo /usr/bin/cobbler replicate --master=<%= @primary_server_ip %> --sync-all --prune && /usr/bin/sudo /usr/bin/cobbler sync
+else
+  echo "Replication already in progress. Skipping."
+fi
 <% end %>

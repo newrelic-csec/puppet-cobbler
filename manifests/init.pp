@@ -192,31 +192,31 @@ define cobbler (
 
   # install section
   if ! defined(Package['python-ldap']) {
-    package { 'python-ldap':     ensure => present, }
+    package { 'python-ldap':   ensure => present, }
   }
   if ! defined(Package['xinetd']) {
-    package { 'xinetd':     ensure => present, }
+    package { 'xinetd':        ensure => present, }
   }
   if ! defined(Package['git']) {
-    package { 'git':             ensure => present, }
+    package { 'git':           ensure => present, }
   }
   if ! defined(Package['debmirror']) {
-    package { 'debmirror':             ensure => present, }
+    package { 'debmirror':     ensure => present, }
   }
   if ! defined(Package['pykickstart']) {
-    package { 'pykickstart':             ensure => present, }
+    package { 'pykickstart':   ensure => present, }
   }
   if ! defined(Package['hardlink']) {
-    package { 'hardlink':             ensure => present, }
+    package { 'hardlink':      ensure => present, }
   }
   if ! defined(Package['cman']) {
-    package { 'cman':             ensure => present, }
+    package { 'cman':          ensure => present, }
   }
   if ! defined(Package['fence-agents']) {
-    package { 'fence-agents':             ensure => present, }
+    package { 'fence-agents':  ensure => present, }
   }
   if ! defined(Package['util-linux-ng']) {
-    package { 'util-linux-ng':             ensure => present, }
+    package { 'util-linux-ng': ensure => present, }
   }
   package { $tftp_package:     ensure => present, }
   package { $syslinux_package: ensure => present, }
@@ -379,6 +379,13 @@ define cobbler (
       source  => 'puppet:///modules/cobbler/cobbler-replicate.cron',
       mode    => '0755',
       require => File['/usr/local/bin/cobbler-replicate'],
+    }
+
+    # cobbler replicatation trigger
+    file { '/usr/lib/python2.6/site-packages/cobbler/modules/sync_post_replicate.py':
+      source  => 'puppet:///modules/cobbler/sync_post_replicate.py',
+      mode    => '0644',
+      require => Package['cobbler'],
     }
 
   }
