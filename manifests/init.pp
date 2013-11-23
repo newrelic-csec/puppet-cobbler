@@ -390,7 +390,7 @@ define cobbler (
       require => Package['cobbler'],
     }
 
-  else {
+  } else {
 
     # cobbler replicate cron script
     file { '/etc/cron.daily/cobbler-replicate':
