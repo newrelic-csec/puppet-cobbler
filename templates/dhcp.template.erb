@@ -21,7 +21,7 @@ set vendorclass = pick-first-value(option vendor-class-identifier, "UNKNOWN");
 
 key omapi_key {
   algorithm hmac-md5;
-  secret "<%= @omapi_key %>";
+  secret <%= @omapi_key %>;
 };
 
 omapi-key omapi_key;
