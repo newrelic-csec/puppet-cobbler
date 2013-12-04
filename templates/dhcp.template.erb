@@ -75,7 +75,7 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
     <% end -%>
     max-lease-time             <%= @maxlease %>;
     default-lease-time         <%= @deflease %>;
-    allow                      unknown-clients;
+    allow                      all clients;
   }
 
   <% if scope.function_any2bool([@enable_on_commit_hook]) == true %>
