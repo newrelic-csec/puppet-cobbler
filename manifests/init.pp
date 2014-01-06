@@ -218,6 +218,9 @@ define cobbler (
   if ! defined(Package['util-linux-ng']) {
     package { 'util-linux-ng': ensure => present, }
   }
+  if ! defined(Package['gpxe-bootimgs']) {
+    package { 'gpxe-bootimgs': ensure => present, }
+  }
   package { $tftp_package:     ensure => present, }
   package { $syslinux_package: ensure => present, }
   package { $package_name:
@@ -357,6 +360,40 @@ define cobbler (
     source => 'puppet:///modules/cobbler/cobbler-reposync.cron',
     mode   => '0755',
   }
+
+  # ---------------------------------------------
+  # Support VMWare ESXi images and gPXE
+
+  file { '/etc/cobbler/pxe/pxesystem_esxi.template':
+    ensure  => 'present',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    content => template('cobbler/pxesystem_esxi.template.erb')
+  }
+
+  file { '/etc/cobbler/pxe/bootcfg_esxi55.template':
+    ensure  => 'present',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    content => template('cobbler/bootcfg_esxi55.template.erb')
+  }
+
+  file { '/etc/cobbler/pxe/bootcfg_system_esxi55.template':
+    ensure => 'link',
+    target => '/etc/cobbler/pxe/bootcfg_esxi55.template'
+  }
+
+  # TFTP server doesn't like symlinks, and we need these to be
+  # available to TFTP clients.
+  exec { 'copy-gpxe-files-to-tftpboot-directory':
+    command => '/bin/cp /usr/share/gpxe/* /var/lib/tftpboot',
+    creates => '/var/lib/tftpboot/undionly.kpxe',
+    require => Package['gpxe-bootimgs'],
+  }
+
+  # ---------------------------------------------
 
 
   if $role != "solitary" {
