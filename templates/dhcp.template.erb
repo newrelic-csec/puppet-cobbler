@@ -34,10 +34,10 @@ failover peer "dhcp-failover" {
   port 647;
   peer address <%= @secondary_server_ip %>;
   peer port 647;
-  max-response-delay 30;
+  max-response-delay 60;
   max-unacked-updates 10;
-  load balance max seconds 3;
-  mclt 1800;
+  load balance max seconds 5;
+  mclt 3600;
   split 128;
 }
 <% elsif role == "secondary" %>
@@ -47,9 +47,9 @@ failover peer "dhcp-failover" {
   port 647;
   peer address  <%= @primary_server_ip %>;
   peer port 647;
-  max-response-delay 30;
+  max-response-delay 60;
   max-unacked-updates 10;
-  load balance max seconds 3;
+  load balance max seconds 5;
 }
 <% end %>
 
