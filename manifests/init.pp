@@ -45,18 +45,19 @@
 #   - $next_server_ip [type: string]
 #     Next Server in cobbler config.
 #
-#   - $nameserversa [type: array]
+#   - $nameservers [type: array]
 #     Nameservers for kickstart files to put in resolv.conf upon
 #     installation.
 #
 #   - $dhcp_interfaces [type: array]
 #     Interface for DHCP to listen on.
 #
-#   - $dhcp_subnets [type: array]
+#   - $networking_subnets [type: hash of hashes]
 #     If you use *DHCP relay* on your network, then $dhcp_interfaces
-#     won't suffice. $dhcp_subnets have to be defined, otherwise,
+#     won't suffice. $networking_subnets have to be defined, otherwise,
 #     DHCP won't offer address to a machine in a network that's
 #     not directly available on the DHCP machine itself.
+#     Typically this would be in hiera.
 #
 #   - $defaultrootpw [type: string]
 #     Hash of root password for kickstart files.
@@ -111,7 +112,7 @@ define cobbler (
   $next_server_ip                        = $::ipaddress,
   $nameservers                           = '127.0.0.1',
   $dhcp_interfaces                       = 'eth0',
-  $dhcp_subnets                          = '',
+  $networking_subnets                    = {"development"=>{"resolvers"=>["192.168.1.1", "192.168.1.2"], "subnet"=>"192.168.1.0", "router"=>"192.168.1.1", "ntpservers"=>["0.centos.pool.ntp.org", "1.centos.pool.ntp.org", "2.centos.pool.ntp.org"], "dnssearch"=>"example.com", "ranges"=>["192.168.1.100 192.168.1.150"], "netmask"=>"255.255.255.0", "broadcast"=>"192.168.1.255", "vlanid"=>"1", "cidr"=>"192.168.1.0/24", "domainname"=>"example.com"}},
   $maxlease                              = 86400,
   $deflease                              = 172800,
   $apache_service                        = 'httpd',
@@ -369,7 +370,8 @@ define cobbler (
     owner   => root,
     group   => root,
     mode    => '0644',
-    content => template('cobbler/pxesystem_esxi.template.erb')
+    content => template('cobbler/pxesystem_esxi.template.erb'),
+    require => Package['cobbler'],
   }
 
   file { '/etc/cobbler/pxe/bootcfg_esxi55.template':
@@ -377,12 +379,14 @@ define cobbler (
     owner   => root,
     group   => root,
     mode    => '0644',
-    content => template('cobbler/bootcfg_esxi55.template.erb')
+    content => template('cobbler/bootcfg_esxi55.template.erb'),
+    require => Package['cobbler'],
   }
 
   file { '/etc/cobbler/pxe/bootcfg_system_esxi55.template':
     ensure => 'link',
-    target => '/etc/cobbler/pxe/bootcfg_esxi55.template'
+    target => '/etc/cobbler/pxe/bootcfg_esxi55.template',
+    require => File['/etc/cobbler/pxe/bootcfg_esxi55.template'],
   }
 
   # TFTP server doesn't like symlinks, and we need these to be

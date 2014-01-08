@@ -1,6 +1,6 @@
 # ******************************************************************
 # Cobbler managed dhcpd.conf file
-# Puppet managed dhcpd.template file for node: <%= fqdn %>
+# Puppet managed dhcpd.template file for node: <%= @fqdn %>
 #
 # generated from cobbler dhcp.conf template ($date)
 # Do NOT make changes to /etc/dhcpd.conf. Instead, make your changes
@@ -27,10 +27,10 @@ key omapi_key {
 omapi-key omapi_key;
 omapi-port 7911;
 
-<% if role == "primary" %>
+<% if @role == "primary" %>
 failover peer "dhcp-failover" {
   primary; # declare this to be the primary server
-  address <%= ipaddress %>;
+  address <%= @ipaddress %>;
   port 647;
   peer address <%= @secondary_server_ip %>;
   peer port 647;
@@ -40,10 +40,10 @@ failover peer "dhcp-failover" {
   mclt 3600;
   split 128;
 }
-<% elsif role == "secondary" %>
+<% elsif @role == "secondary" %>
 failover peer "dhcp-failover" {
   secondary; # declare this to be the secondary server
-  address <%= ipaddress %>;
+  address <%= @ipaddress %>;
   port 647;
   peer address  <%= @primary_server_ip %>;
   peer port 647;
@@ -53,7 +53,7 @@ failover peer "dhcp-failover" {
 }
 <% end %>
 
-<% networking_subnets.each_pair do |key, data| -%>
+<% @networking_subnets.each_pair do |key, data| -%>
 subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
 
   option routers                  <%= data['router'] %>;
@@ -64,10 +64,10 @@ subnet <%= data['subnet'] %> netmask <%= data['netmask'] %> {
   option domain-name-servers      <%= data['resolvers'].join(', ') %>;
   option ntp-servers              <%= data['ntpservers'].join(', ') %>;
   filename                        "/pxelinux.0";
-  next-server                     <%= ipaddress %>;
+  next-server                     <%= @ipaddress %>;
 
   pool  {
-    <% if role != "solitary" %>
+    <% if @role != "solitary" %>
     failover peer              "dhcp-failover";
     <% end %>
     <% data['ranges'].each do |range| -%>
