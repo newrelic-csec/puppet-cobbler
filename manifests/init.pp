@@ -136,6 +136,8 @@ define cobbler (
   $remove_old_puppet_certs_automatically = 1,
   $createrepo_flags                      = '-c cache -s sha',
   $default_kickstart                     = '/var/lib/cobbler/kickstarts/default.ks',
+  $cobbler_lib_dir                       = '/var/lib/cobbler',
+  $cobbler_settings_dir                  = '/etc/cobbler',
   $webroot                               = '/var/www/cobbler',
   $www_html_dir                          = '/var/www/html',
   $http_config_prefix                    = '/etc/httpd/conf.d',
@@ -399,6 +401,25 @@ define cobbler (
 
   # ---------------------------------------------
 
+  # Update Distribution Signatures (2 locations)
+  file { "${cobbler_settings_dir}/distro_signatures.json":
+    ensure  => 'present',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    source  => 'puppet:///modules/cobbler/distro_signatures.json',
+    require => Package['cobbler'],
+    notify  => Service[$service_name],
+  }
+  file { "${cobbler_lib_dir}/distro_signatures.json":
+    ensure  => 'present',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    source  => 'puppet:///modules/cobbler/distro_signatures.json',
+    require => Package['cobbler'],
+    notify  => Service[$service_name],
+  }
 
   if $role != "solitary" {
 
