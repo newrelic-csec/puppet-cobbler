@@ -434,11 +434,17 @@ define cobbler (
 
   }
 
+  exec { 'clean_python_bytecode_sync_post_replicate.py':
+    command     => '/bin/rm -f /usr/lib/python2.6/site-packages/cobbler/modules/sync_post_replicate.pyc; /bin/rm -f /usr/lib/python2.6/site-packages/cobbler/modules/sync_post_replicate.pyo',
+    refreshonly => true,
+    notify      => Service[$service_name],
+  }
+
   if $role == "primary" {
 
     # cobbler replicate cron script
     file { '/etc/cron.daily/cobbler-replicate':
-      ensure  => absent,
+      ensure  => present,
       source  => 'puppet:///modules/cobbler/cobbler-replicate.cron',
       mode    => '0755',
       require => File['/usr/local/bin/cobbler-replicate'],
@@ -446,10 +452,11 @@ define cobbler (
 
     # cobbler replicatation trigger
     file { '/usr/lib/python2.6/site-packages/cobbler/modules/sync_post_replicate.py':
-      ensure  => absent,
+      ensure  => present,
       source  => 'puppet:///modules/cobbler/sync_post_replicate.py',
       mode    => '0644',
       require => Package['cobbler'],
+      notify  => Exec['clean_python_bytecode_sync_post_replicate.py'],
     }
 
   } else {
@@ -467,13 +474,6 @@ define cobbler (
       source  => 'puppet:///modules/cobbler/sync_post_replicate.py',
       mode    => '0644',
       notify  => Exec['clean_python_bytecode_sync_post_replicate.py'],
-    }
-
-    # cobbler sync command
-    exec { 'clean_python_bytecode_sync_post_replicate.py':
-      command     => '/bin/rm -f /usr/lib/python2.6/site-packages/cobbler/modules/sync_post_replicate.pyc',
-      refreshonly => true,
-      notify      => Service[$service_name],
     }
 
   }
