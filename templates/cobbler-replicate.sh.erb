@@ -12,8 +12,7 @@ ssh -t -t -oStrictHostKeyChecking=no -oBatchMode=yes -i <%= @replication_pkey_pa
 <% elsif role == "secondary" %>
 /bin/ps auxwwwwww | /bin/grep -v grep | /bin/grep -q "cobbler replicate"
 if [ $? -eq 1 ]; then
-  /usr/bin/sudo /usr/bin/cobbler replicate --master=<%= @primary_server_ip %> --sync-all --prune --distros=* --profiles=* --systems=* --repos=* --imag
-e=* --mgmtclasses=* --packages=* --files=* && /usr/bin/sudo /usr/bin/cobbler sync
+  /usr/bin/sudo /usr/bin/cobbler replicate --master=<%= @primary_server_ip %> --sync-all --prune --distros=* --profiles=* --systems=* --repos=* --image=* --mgmtclasses=* --packages=* --files=* && /usr/bin/sudo /usr/bin/cobbler sync
 else
   echo "Replication already in progress. Skipping."
 fi
