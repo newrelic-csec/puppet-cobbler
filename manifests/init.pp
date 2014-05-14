@@ -365,6 +365,27 @@ define cobbler (
   }
 
   # ---------------------------------------------
+  # Support CoreOS images and gPXE
+
+  file { '/etc/cobbler/pxe/pxesystem_coreos.template':
+    ensure  => 'present',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    content => template('cobbler/pxesystem_coreos.template.erb'),
+    require => Package['cobbler'],
+  }
+
+  file { '/etc/cobbler/pxe/bootcfg_coreos.template':
+    ensure  => 'present',
+    owner   => root,
+    group   => root,
+    mode    => '0644',
+    content => template('cobbler/bootcfg_coreos.template.erb'),
+    require => Package['cobbler'],
+  }
+
+  # ---------------------------------------------
   # Support VMWare ESXi images and gPXE
 
   file { '/etc/cobbler/pxe/pxesystem_esxi.template':
@@ -391,6 +412,8 @@ define cobbler (
     require => File['/etc/cobbler/pxe/bootcfg_esxi55.template'],
   }
 
+  # ---------------------------------------------
+
   # TFTP server doesn't like symlinks, and we need these to be
   # available to TFTP clients.
   exec { 'copy-gpxe-files-to-tftpboot-directory':
@@ -398,8 +421,6 @@ define cobbler (
     creates => '/var/lib/tftpboot/undionly.kpxe',
     require => Package['gpxe-bootimgs'],
   }
-
-  # ---------------------------------------------
 
   # Update Distribution Signatures (2 locations)
   file { "${cobbler_settings_dir}/distro_signatures.json":
