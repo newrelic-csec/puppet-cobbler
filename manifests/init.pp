@@ -422,24 +422,21 @@ define cobbler (
     require => Package['gpxe-bootimgs'],
   }
 
-  # Update Distribution Signatures (2 locations)
-  file { "${cobbler_settings_dir}/distro_signatures.json":
-    ensure  => 'present',
-    owner   => root,
-    group   => root,
-    mode    => '0644',
-    source  => 'puppet:///modules/cobbler/distro_signatures.json',
+  # Update Distribution Signatures
+  exec { 'update distro_signatures.json':
+    command => '/bin/true',
     require => Package['cobbler'],
-    notify  => Service[$service_name],
+    unless  => '/usr/bin/cobbler signature update'
   }
+
+  # link to signatures
   file { "${cobbler_lib_dir}/distro_signatures.json":
-    ensure  => 'present',
+    ensure  => 'link',
     owner   => root,
     group   => root,
     mode    => '0644',
-    source  => 'puppet:///modules/cobbler/distro_signatures.json',
+    target => "/etc/cobbler/distro_signatures.json",
     require => Package['cobbler'],
-    notify  => Service[$service_name],
   }
 
   if $role != "solitary" {
