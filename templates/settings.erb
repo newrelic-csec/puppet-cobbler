@@ -50,6 +50,7 @@ build_reporting_sender: "<%= @reporting_sender %>"
 build_reporting_email: [ '<%= @reporting_email %>' ]
 build_reporting_smtp_server: "localhost"
 build_reporting_subject: "Cobbler Build Report"
+build_reporting_ignorelist: [ "" ]
 
 # Cheetah-language kickstart templates can import Python modules.
 # while this is a useful feature, it is not safe to allow them to 
@@ -340,9 +341,6 @@ register_new_installs: <%= @register_new_installs %>
 # does not support -l, you may need to remove that option.
 reposync_flags: "-l -n -d"
 
-# These options will be used for an rsync initiated by cobbler replicate
-replicate_rsync_options: "-avzH"
-
 # when DHCP and DNS management are enabled, cobbler sync can automatically
 # restart those services to apply changes.  The exception for this is
 # if using ISC for DHCP, then omapi eliminates the need for a restart.
@@ -387,6 +385,11 @@ server: <%= @server_ip %>
 # cobbler sync to open a connection to a remote address if one is in the
 # configuration and would traceback.
 client_use_localhost: 0
+
+# If set to 1, all commands to the API (not directly to the XMLRPC
+# server) will go over HTTPS instead of plaintext. Be sure to change
+# the http_port setting to the correct value for the web server
+client_use_https: 0
 
 # this is a directory of files that cobbler uses to make
 # templating easier.  See the Wiki for more information.  Changing
@@ -437,3 +440,13 @@ yumdownloader_flags: "--resolve"
 
 # sort and indent JSON output to make it more human-readable
 serializer_pretty_json: <%= @pretty_json %>
+
+# replication rsync options for distros, kickstarts, snippets set to override default value of "-avzH"
+replicate_rsync_options: "-avzH"
+
+# replication rsync options for repos set to override default value of "-avzH"
+replicate_repo_rsync_options: "-avzH"
+
+# always write DHCP entries, regardless if netboot is enabled
+always_write_dhcp_entries: 0
+
